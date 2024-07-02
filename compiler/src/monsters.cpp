@@ -893,8 +893,7 @@ bool Monsters::loadMonster(const std::string& file, const std::string& monsterNa
 				std::string tmpStrValue = asLowerCaseString(attr.as_string());
 				if (tmpStrValue == "physical") {
 					mType->info.damageImmunities |= COMBAT_PHYSICALDAMAGE;
-					mType->info.damageImmunities |= COMBAT_CUSTOM_PHYSICAL;
-					mType->info.conditionImmunities |= CONDITION_CUSTOM_PHYSICAL;
+					mType->info.conditionImmunities |= CONDITION_PHYSICAL;
 				} else if (tmpStrValue == "energy") {
 					mType->info.damageImmunities |= COMBAT_ENERGYDAMAGE;
 					mType->info.conditionImmunities |= CONDITION_ENERGY;
@@ -923,7 +922,7 @@ bool Monsters::loadMonster(const std::string& file, const std::string& monsterNa
 			} else if ((attr = immunityNode.attribute("physical"))) {
 				if (attr.as_bool()) {
 					mType->info.damageImmunities |= COMBAT_PHYSICALDAMAGE;
-					mType->info.damageImmunities |= COMBAT_CUSTOM_PHYSICAL;
+					mType->info.conditionImmunities |= CONDITION_PHYSICAL;
 				}
 			} else if ((attr = immunityNode.attribute("energy"))) {
 				if (attr.as_bool()) {

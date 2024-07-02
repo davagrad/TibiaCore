@@ -512,9 +512,9 @@ bool Items::loadItems()
 							items[id].combatType = combatType;
 							items[id].conditionDamage.reset(conditionDamage);
 						} else if (identifier == "customphysical") {
-							conditionDamage = new ConditionDamage(CONDITIONID_COMBAT, CONDITION_CUSTOM_PHYSICAL);
+							conditionDamage = new ConditionDamage(CONDITIONID_COMBAT, CONDITION_PHYSICAL);
 							conditionDamage->setParam(CONDITION_PARAM_DELAYED, true);
-							combatType = COMBAT_CUSTOM_PHYSICAL;
+							combatType = COMBAT_PHYSICALDAMAGE;
 							items[id].combatType = combatType;
 							items[id].conditionDamage.reset(conditionDamage);
 						} else {
