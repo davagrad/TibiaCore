@@ -255,7 +255,7 @@ class ConditionDamage final : public Condition
 				count = max_count = 8;
 			} else if (type == CONDITION_ENERGY) {
 				count = max_count = 10;
-			} else if (type == CONDITION_CUSTOM_PHYSICAL) {
+			} else if (type == CONDITION_PHYSICAL) {
 				count = max_count = 5;
 			}
 		}

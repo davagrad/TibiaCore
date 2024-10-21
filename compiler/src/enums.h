@@ -102,7 +102,6 @@ enum CombatType_t : uint16_t {
 	COMBAT_LIFEDRAIN = 1 << 5,
 	COMBAT_MANADRAIN = 1 << 6,
 	COMBAT_HEALING = 1 << 7,
-	COMBAT_CUSTOM_PHYSICAL = 5,
 
 	COMBAT_COUNT = 9
 };
@@ -235,7 +234,6 @@ enum ConditionType_t {
 	CONDITION_POISON = 1 << 0,
 	CONDITION_FIRE = 1 << 1,
 	CONDITION_ENERGY = 1 << 2,
-	CONDITION_CUSTOM_PHYSICAL = 5,
 	CONDITION_HASTE = 1 << 3,
 	CONDITION_PARALYZE = 1 << 4,
 	CONDITION_OUTFIT = 1 << 5,
@@ -253,6 +251,7 @@ enum ConditionType_t {
 	CONDITION_EXHAUST = 1 << 17,
 	CONDITION_PACIFIED = 1 << 18,
 	CONDITION_AGGRESSIVE = 1 << 19,
+	CONDITION_PHYSICAL = 1 << 20,
 };
 
 enum ConditionId_t : int8_t {

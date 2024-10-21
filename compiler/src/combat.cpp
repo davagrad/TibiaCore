@@ -79,7 +79,7 @@ CombatType_t Combat::ConditionToDamageType(ConditionType_t type)
 		case CONDITION_POISON:
 			return COMBAT_EARTHDAMAGE;
 
-		case CONDITION_CUSTOM_PHYSICAL:
+		case CONDITION_PHYSICAL:
 			return COMBAT_PHYSICALDAMAGE;
 
 		default:
@@ -101,8 +101,8 @@ ConditionType_t Combat::DamageToConditionType(CombatType_t type)
 		case COMBAT_EARTHDAMAGE:
 			return CONDITION_POISON;
 
-		case COMBAT_CUSTOM_PHYSICAL:
-			return CONDITION_CUSTOM_PHYSICAL;
+		case COMBAT_PHYSICALDAMAGE:
+			return CONDITION_PHYSICAL;
 
 		default:
 			return CONDITION_NONE;
@@ -934,60 +934,39 @@ bool Combat::closeAttack(Creature* attacker, Creature* target, fightMode_t fight
 				int32_t charges = weapon->getCharges() - 1;
 				if (charges <= 0) {
 					g_game.internalRemoveItem(weapon);
-				} else {
+				}
+				else {
 					g_game.transformItem(weapon, weapon->getID(), charges);
 				}
 			}
 
 			if (weapon->getWeaponSpecialEffect() == 3 && weapon->getWeaponType() != WEAPON_DISTANCE
 				&& weapon->getWeaponType() != WEAPON_WAND && weapon->getWeaponType() != WEAPON_AMMO && weapon->getWeaponType() != WEAPON_NONE) {
-				
+
 				if (!weapon) {
 					// redirect to fist fighting
 					return closeAttack(attacker, target, player->getFightMode());
 				}
 
 				if (hit) {
-					ConditionDamage* Damage = new ConditionDamage(CONDITIONID_COMBAT, DamageToConditionType(weapon->getCombatType()));
 
-					bool weapon_fire = DamageToConditionType(weapon->getCombatType()) == CONDITION_FIRE;
-					bool weapon_energy = DamageToConditionType(weapon->getCombatType()) == CONDITION_ENERGY;
-					bool weapon_poison = DamageToConditionType(weapon->getCombatType()) == CONDITION_POISON;
-					bool weapon_physical = DamageToConditionType(weapon->getCombatType()) == CONDITION_CUSTOM_PHYSICAL;
-					bool check_condition = target->getCondition(DamageToConditionType(weapon->getCombatType()));
+					ConditionType_t conditionType = DamageToConditionType(weapon->getCombatType());
 					const uint32_t weapon_skill = (player->getBaseSkill(weapon->getWeaponType()) + weapon->getAttack());
-
-					if (weapon_physical == true && check_condition == false) {
-						Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(3, 8)); // hit 5~10 normal arrow
-						Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(5, (weapon_skill / 7.5)));
-						Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, normal_random(5, (weapon_skill / 7.5)));
-						g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-
-					} else if (weapon_fire == true && check_condition == false) {
-						Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(3, 10)); // hit 5~10 normal arrow
-						Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(1, (weapon_skill / 7)));
-						Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, normal_random(1, (weapon_skill / 7)));
-						g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-
-					} else if (weapon_energy == true && check_condition == false) {
-						Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(3, 8)); // hit 5~10 normal arrow
-						Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(5, (weapon_skill / 5)));
-						Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, normal_random(5, (weapon_skill / 5)));
-						g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-
-					} else if (weapon_poison == true && check_condition == false) {
-						Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(3, 10)); // hit 5~10 normal arrow
-						Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(1, (weapon_skill / 7)));
-						Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, normal_random(1, (weapon_skill / 7)));
-						g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-
+					switch (conditionType)
+					{
+					case CONDITION_POISON:
+						setConditionSpecialWeapon(target, attacker, weapon, 20, normal_random(5, 5 + (weapon_skill / 7)), 5);
+						break;
+					case CONDITION_FIRE:
+						setConditionSpecialWeapon(target, attacker, weapon, 10, normal_random(5, (weapon_skill / 7)), 7);
+						break;
+					case CONDITION_ENERGY:
+						setConditionSpecialWeapon(target, attacker, weapon, 3, normal_random(10, 10 + (weapon_skill / 5)), 10);
+						break;
+					case CONDITION_PHYSICAL:
+						setConditionSpecialWeapon(target, attacker, weapon, normal_random(1, (weapon_skill / 7)), normal_random(5, 5 + (weapon_skill / 7.5)), 3);
+						break;
 					}
-					Damage->setParam(CONDITION_PARAM_SPECIAL, 1);
-					Damage->setParam(CONDITION_PARAM_OWNER, attacker->getID());
-					Damage->setParam(CONDITION_PARAM_COUNT, 2);
-					Damage->setParam(CONDITION_PARAM_MAX_COUNT, 2);
-					Damage->setParam(CONDITION_PARAM_EFFECT, weapon->getEffectItem());
-					target->addCombatCondition(Damage);
 				}
 			}
 		}
@@ -1047,12 +1026,13 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 
 		if (weapon->getWeaponType() == WEAPON_DISTANCE) {
 			ammunition = player->getAmmunition();
-			
+
 			if (weapon->getAmmoType() != AMMO_NONE) {
 
 				if (!ammunition || weapon->getAmmoType() != ammunition->getAmmoType()) {
 					return closeAttack(attacker, target, fightMode);
-				} else if (!ammunition || ammunition->getWeaponType() == WEAPON_DISTANCE) {
+				}
+				else if (!ammunition || ammunition->getWeaponType() == WEAPON_DISTANCE) {
 					return closeAttack(attacker, target, fightMode);
 				}
 				else {
@@ -1092,7 +1072,8 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 					uint16_t count = weapon->getItemCount();
 					if (count > 1) {
 						g_game.transformItem(weapon, weapon->getID(), count - 1);
-					} else {
+					}
+					else {
 						g_game.internalRemoveItem(weapon);
 					}
 
@@ -1110,7 +1091,8 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 				uint16_t count = ammunition->getItemCount();
 				if (count > 1) {
 					g_game.transformItem(ammunition, ammunition->getID(), count - 1);
-				} else {
+				}
+				else {
 					g_game.internalRemoveItem(ammunition);
 				}
 			}
@@ -1134,18 +1116,18 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 		if (Player* player = attacker->getPlayer()) {
 			if (player->getAddAttackSkill()) {
 				switch (player->getLastAttackBlockType()) {
-					case BLOCK_NONE: {
-						player->addSkillAdvance(SKILL_DISTANCE, 2);
-						break;
-					}
+				case BLOCK_NONE: {
+					player->addSkillAdvance(SKILL_DISTANCE, 2);
+					break;
+				}
 
-					case BLOCK_DEFENSE:
-					case BLOCK_ARMOR: {
-						player->addSkillAdvance(SKILL_DISTANCE, 1);
-						break;
-					}
+				case BLOCK_DEFENSE:
+				case BLOCK_ARMOR: {
+					player->addSkillAdvance(SKILL_DISTANCE, 1);
+					break;
+				}
 
-					default: break;
+				default: break;
 				}
 			}
 		}
@@ -1154,9 +1136,9 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 
 		if (!Position::areInRange<1, 1, 0>(attacker->getPosition(), target->getPosition())) {
 			static std::vector<std::pair<int32_t, int32_t>> destList{
-				{ -1, -1 },{ 0, -1 },{ 1, -1 },
-				{ -1,  0 },{ 0,  0 },{ 1,  0 },
-				{ -1,  1 },{ 0,  1 },{ 1,  1 }
+				{ -1, -1 }, { 0, -1 }, { 1, -1 },
+				{ -1,  0 }, { 0,  0 }, { 1,  0 },
+				{ -1,  1 }, { 0,  1 }, { 1,  1 }
 			};
 			std::shuffle(destList.begin(), destList.end(), getRandomGenerator());
 
@@ -1184,9 +1166,10 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 
 				target->addCombatCondition(poisonDamage);
 			}
-		} else if (specialEffect == 2) {
+		}
+		else if (specialEffect == 2) {
 			DamageImpact impact;
-	
+
 			impact.actor = attacker;
 			impact.damage.type = COMBAT_PHYSICALDAMAGE;
 			impact.damage.value = -Combat::computeDamage(attacker, attackStrength, attackVariation);
@@ -1195,125 +1178,75 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 			circleShapeSpell(attacker, destTile->getPosition(), 0xFF, distanceEffect, 3, &impact, 7);
 
 		}
-		else if (specialEffect == 3 && weapon->getWeaponSpecialEffect() != 3 && hit) {
-			ConditionDamage* Damage = new ConditionDamage(CONDITIONID_COMBAT, DamageToConditionType(ammunition->getCombatType()));
+		else if (hit && specialEffect == 3 && weapon->getWeaponSpecialEffect() != 3) {
 
-			const uint32_t w_a = (ammunition->getAttack() + weapon->getAttack());
-			bool ammo_fire = DamageToConditionType(ammunition->getCombatType()) == CONDITION_FIRE;
-			bool ammo_energy = DamageToConditionType(ammunition->getCombatType()) == CONDITION_ENERGY;
-			bool ammo_poison = DamageToConditionType(ammunition->getCombatType()) == CONDITION_POISON;
-			//bool ammo_physical = DamageToConditionType(ammunition->getCombatType()) == CONDITION_CUSTOM_PHYSICAL;
+			const uint32_t am_we = (ammunition->getAttack() + weapon->getAttack());
+			ConditionType_t conditionType = DamageToConditionType(ammunition->getCombatType());
 
-			bool check_condition = target->getCondition(DamageToConditionType(ammunition->getCombatType()));
-
-			if (ammo_energy == true) {
-				if (check_condition == false) {
-					Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(3, 8));
-					Damage->setParam(CONDITION_PARAM_MAXVALUE, w_a - 15); // for bow 15 hit energy cycle 8 max
-					g_game.addMagicEffect(targetPos, ammunition->getEffectItem());
-					Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, normal_random(1, w_a - 15));
-				}
+			switch (conditionType)
+			{
+			case CONDITION_POISON:
+				setConditionSpecialWeapon(target, attacker, ammunition, 20, normal_random(5, 5 + (am_we / 7)), 5);
+				break;
+			case CONDITION_FIRE:
+				setConditionSpecialWeapon(target, attacker, ammunition, 10, normal_random(5, (am_we / 7)), 7);
+				break;
+			case CONDITION_ENERGY:
+				setConditionSpecialWeapon(target, attacker, ammunition, 3, normal_random(10, 10 + (am_we / 5)), 10);
+				break;
+			case CONDITION_PHYSICAL:
+				setConditionSpecialWeapon(target, attacker, ammunition, normal_random(1, (am_we / 7)), normal_random(5, 5 + (am_we / 7.5)), 3);
+				break;
 			}
-			else if (ammo_fire == true) {
-				if (check_condition == false) {
-					Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(5, 10));
-					Damage->setParam(CONDITION_PARAM_MAXVALUE, w_a - 25); // for bow 10 hit fire cycle 10 max
-					g_game.addMagicEffect(targetPos, ammunition->getEffectItem());
-					Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, normal_random(1, w_a - 25));
-				}
-			}
-			else if (ammo_poison == true) {
-				if (check_condition == false) {
-					Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(5, 10));
-					Damage->setParam(CONDITION_PARAM_MAXVALUE, w_a - 25); // for bow 10 hit fire cycle 10 max
-					g_game.addMagicEffect(targetPos, ammunition->getEffectItem());
-					Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, (w_a - 20));
-				}
-			}
-			Damage->setParam(CONDITION_PARAM_SPECIAL, 1);
-			Damage->setParam(CONDITION_PARAM_OWNER, attacker->getID());
-			Damage->setParam(CONDITION_PARAM_COUNT, 3);
-			Damage->setParam(CONDITION_PARAM_MAX_COUNT, 3);
-			Damage->setParam(CONDITION_PARAM_EFFECT, ammunition->getEffectItem());
+		}
+		else if (hit && weapon->getWeaponSpecialEffect() == 3 && ammunition->getWeaponSpecialEffect() != 1 && ammunition->getWeaponSpecialEffect() != 2) {
 
-			target->addCombatCondition(Damage);
-
-		} else if (weapon->getWeaponSpecialEffect() == 3 && ammunition->getWeaponSpecialEffect() != 1 && ammunition->getWeaponSpecialEffect() != 2 && hit) {
-			ConditionDamage* Damage = new ConditionDamage(CONDITIONID_COMBAT, DamageToConditionType(weapon->getCombatType()));
-
-			const uint32_t w_a = (ammunition->getAttack() + weapon->getAttack());
-			bool weapon_fire = DamageToConditionType(weapon->getCombatType()) == CONDITION_FIRE;
-			bool weapon_energy = DamageToConditionType(weapon->getCombatType()) == CONDITION_ENERGY;
-			bool weapon_poison = DamageToConditionType(weapon->getCombatType()) == CONDITION_POISON;
-			bool weapon_physical = DamageToConditionType(weapon->getCombatType()) == CONDITION_CUSTOM_PHYSICAL;
-
-			bool ammo_fire = DamageToConditionType(ammunition->getCombatType()) == CONDITION_FIRE;
-			bool ammo_energy = DamageToConditionType(ammunition->getCombatType()) == CONDITION_ENERGY;
-			bool ammo_poison = DamageToConditionType(ammunition->getCombatType()) == CONDITION_POISON;
-			//bool ammo_physical = DamageToConditionType(ammunition->getCombatType()) == CONDITION_CUSTOM_PHYSICAL;
-
-			bool check_condition = target->getCondition(DamageToConditionType(weapon->getCombatType()));
 			bool type_arrow = weapon->getAmmoType() == AMMO_ARROW;
 			bool type_bolt = weapon->getAmmoType() == AMMO_BOLT;
+			const uint32_t am_we = (ammunition->getAttack() + weapon->getAttack());
+			ConditionType_t conditionType = DamageToConditionType(weapon->getCombatType());
+			ConditionType_t conditionTypeAmmo = DamageToConditionType(ammunition->getCombatType());
 
-			if (weapon_energy == true && ammo_energy == true) {
-				if (check_condition == false) {
-					Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(3, 7)); // full hit 5<40 (100~175) bow/arrow energy
-					Damage->setParam(CONDITION_PARAM_MAXVALUE, w_a);
+			if (conditionTypeAmmo) {
+				switch (conditionType)
+				{
+				case CONDITION_POISON:
+					setConditionSpecialWeapon(target, attacker, weapon, 20, normal_random(5, 5 + (am_we / 7)), 5, true);
+					break;
+				case CONDITION_FIRE:
+					setConditionSpecialWeapon(target, attacker, weapon, 10, normal_random(5, (am_we / 7)), 7, true);
+					break;
+				case CONDITION_ENERGY:
+					setConditionSpecialWeapon(target, attacker, weapon, 3, normal_random(10, 10 + (am_we / 5)), 10, true);
+					break;
+				case CONDITION_PHYSICAL:
+					setConditionSpecialWeapon(target, attacker, weapon, normal_random(1, (am_we / 7)), normal_random(5, 5 + (am_we / 7.5)), 3, true);
+					break;
 				}
-				g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-				Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, normal_random(w_a / 8, w_a / 4));
 			}
-			if (weapon_fire == true && ammo_fire == true) {
-				if (check_condition == false) {
-					Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(5, 10)); // full hit 10~20 (50~200) bow/arrow fire
-					Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(w_a / 4, w_a / 2));
+			else {
+				switch (conditionType)
+				{
+				case CONDITION_POISON:
+					setConditionSpecialWeapon(target, attacker, weapon, 20, normal_random(5, 5 + (am_we / 7)), 5);
+					break;
+				case CONDITION_FIRE:
+					setConditionSpecialWeapon(target, attacker, weapon, 10, normal_random(5, (am_we / 7)), 7);
+					break;
+				case CONDITION_ENERGY:
+					setConditionSpecialWeapon(target, attacker, weapon, 3, normal_random(10, 10 + (am_we / 5)), 10);
+					break;
+				case CONDITION_PHYSICAL:
+					if (type_bolt) {
+						setConditionSpecialWeapon(target, attacker, weapon, normal_random(1, (am_we / 7)), normal_random(5, 5 + (am_we / 7.5)), 3);
+					}
+					else if (type_arrow) {
+						setConditionSpecialWeapon(target, attacker, weapon, normal_random(1, (am_we / 7)), normal_random(5, 5 + (am_we / 7.5)), 3);
+					}
+					break;
 				}
-				g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-				Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, normal_random(5, w_a / 4));
 			}
-			if (weapon_energy == true && ammo_energy == false && check_condition == false) {
-				Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(3, 8)); // hit 5<25 (60~90) normal arrow
-				Damage->setParam(CONDITION_PARAM_MAXVALUE, (w_a - ammunition->getAttack()) + 15);
-				g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-			}
-			if (weapon_fire == true && ammo_fire == false && check_condition == false) {
-				Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(5, 10)); // hit 5~10 (25~100) normal arrow
-				Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(5, 10));
-				g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-			}
-			if (weapon_poison == true && ammo_poison == true) {
-				if (check_condition == false) {
-					Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(7, 15)); // full hit 7~14 (55~210) bow/arrow poison
-					Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(w_a / 4.5, w_a / 2.5));
-				}
-				g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-				Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, normal_random(1, w_a / 5));
-			}
-			if (weapon_poison == true && ammo_poison == false && check_condition == false) {
-				Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(7, 15)); // full hit 10~20 (35~150) normal arrow
-				Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(5, 10));
-				g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-			}
-			if (weapon_physical == true && type_bolt == true && check_condition == false) {
-				Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(5, 8));
-				Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(10, (w_a / 2.5))); // hit 1<5~18 (45~168) power bolt
-				g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-			}
-			if (weapon_physical == true && type_arrow == true && check_condition == false) {
-				Damage->setParam(CONDITION_PARAM_CYCLE, normal_random(5, 10)); // hit 5~10 normal arrow
-				Damage->setParam(CONDITION_PARAM_MAXVALUE, normal_random(5, (w_a / 2)));
-				g_game.addMagicEffect(targetPos, weapon->getEffectItem());
-			}
-			Damage->setParam(CONDITION_PARAM_SPECIAL, 1);
-			Damage->setParam(CONDITION_PARAM_OWNER, attacker->getID());
-			Damage->setParam(CONDITION_PARAM_COUNT, 2);
-			Damage->setParam(CONDITION_PARAM_MAX_COUNT, 2);
-			Damage->setParam(CONDITION_PARAM_EFFECT, weapon->getEffectItem());
-
-			target->addCombatCondition(Damage);
 		}
-
 		if (!hit) {
 			if (specialEffect != 2) {
 				g_game.addDistanceEffect(attackerPos, destTile->getPosition(), distanceEffect);
@@ -2141,4 +2074,31 @@ void DunkenImpact::handleCreature(Creature* target)
 {
 	Condition* condition = Condition::createCondition(CONDITIONID_COMBAT, CONDITION_DRUNK, duration);
 	target->addCondition(condition);
+}
+
+void Combat::setConditionSpecialWeapon(Creature* target, Creature* attacker, Item* item, uint32_t count, uint32_t damage, uint32_t delay, bool checkCondition) {
+
+	ConditionDamage* Damage = new ConditionDamage(CONDITIONID_COMBAT, DamageToConditionType(item->getCombatType()));
+	bool check_condition = target->getCondition(DamageToConditionType(item->getCombatType()));
+
+	if (!check_condition) {
+
+		Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, damage);
+		g_game.addMagicEffect(target->position, item->getEffectItem());
+		Damage->setParam(CONDITION_PARAM_CYCLE, count);
+		Damage->setParam(CONDITION_PARAM_MAXVALUE, damage);
+		Damage->setParam(CONDITION_PARAM_SPECIAL, 1);
+		Damage->setParam(CONDITION_PARAM_OWNER, attacker->getID());
+		Damage->setParam(CONDITION_PARAM_COUNT, delay);
+		Damage->setParam(CONDITION_PARAM_MAX_COUNT, delay);
+		Damage->setParam(CONDITION_PARAM_EFFECT, item->getEffectItem());
+	}
+	else {
+		// For special arrow with special crossbow to damage on hit.
+		if (checkCondition) {
+			Damage->setParam(CONDITION_PARAM_HIT_DAMAGE, damage);
+			g_game.addMagicEffect(target->position, item->getEffectItem());
+		}
+	}
+	target->addCombatCondition(Damage);
 }

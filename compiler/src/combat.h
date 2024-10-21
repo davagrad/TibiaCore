@@ -289,6 +289,8 @@ class Combat
 		static bool closeAttack(Creature* attacker, Creature* target, fightMode_t fightMode);
 		static bool rangeAttack(Creature* attacker, Creature* target, fightMode_t fightMode);
 
+		static void setConditionSpecialWeapon(Creature* target, Creature* attacker, Item* item, uint32_t cycle, uint32_t damage, uint32_t count, bool check = false);
+
 		static void circleShapeSpell(Creature* attacker, const Position& toPos, int32_t range, int32_t animation, int32_t radius, DamageImpact* impact, int32_t effect);
 
 		static void getAttackValue(Creature* creature, uint32_t& attackValue, uint32_t& skillValue, uint8_t& skill);

@@ -131,7 +131,7 @@ Condition* Condition::createCondition(ConditionId_t id, ConditionType_t type, in
 		case CONDITION_POISON:
 		case CONDITION_FIRE:
 		case CONDITION_ENERGY:
-		case CONDITION_CUSTOM_PHYSICAL:
+		case CONDITION_PHYSICAL:
 			return new ConditionDamage(id, type, subId);
 
 		case CONDITION_HASTE:
@@ -882,6 +882,10 @@ bool ConditionDamage::startCondition(Creature* creature)
 
 bool ConditionDamage::executeCondition(Creature* creature, int32_t)
 {
+	if (creature->getMonster() && creature->isImmune(conditionType)) {
+		return false;
+	}
+	
 	if (conditionType == CONDITION_FIRE) {
 
 		const int32_t r_cycle = cycle;
@@ -986,7 +990,7 @@ bool ConditionDamage::executeCondition(Creature* creature, int32_t)
 		else {
 			return false;
 		}
-	} else if (conditionType == CONDITION_CUSTOM_PHYSICAL) {
+	} else if (conditionType == CONDITION_PHYSICAL) {
 		const int32_t r_cycle = cycle;
 
 		if (r_cycle) {
