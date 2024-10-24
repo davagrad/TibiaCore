@@ -949,23 +949,23 @@ bool Combat::closeAttack(Creature* attacker, Creature* target, fightMode_t fight
 				}
 
 				if (hit) {
-
+					uint32_t d1_d2 = 0;
 					ConditionType_t conditionType = DamageToConditionType(weapon->getCombatType());
 					const uint32_t weapon_skill = (player->getBaseSkill(weapon->getWeaponType()) + weapon->getAttack());
-					switch (conditionType)
-					{
-					case CONDITION_POISON:
-						setConditionSpecialWeapon(target, attacker, weapon, 20, normal_random(5, 5 + (weapon_skill / 7)), 5);
-						break;
-					case CONDITION_FIRE:
-						setConditionSpecialWeapon(target, attacker, weapon, 10, normal_random(5, (weapon_skill / 7)), 7);
-						break;
-					case CONDITION_ENERGY:
-						setConditionSpecialWeapon(target, attacker, weapon, 3, normal_random(10, 10 + (weapon_skill / 5)), 10);
-						break;
-					case CONDITION_PHYSICAL:
-						setConditionSpecialWeapon(target, attacker, weapon, normal_random(1, (weapon_skill / 7)), normal_random(5, 5 + (weapon_skill / 7.5)), 3);
-						break;
+					
+					if (conditionType) {
+						uint32_t wD1 = weapon->getDamageA();
+						uint32_t wD2 = weapon->getDamageB();
+						if (wD1 && wD2) {
+							d1_d2 = normal_random(wD1, wD2);
+						}
+						else if (wD1 || wD2) {
+							d1_d2 = wD1 ? wD1 : wD2;
+						} 
+						else {
+							d1_d2 = normal_random(weapon_skill / 10, weapon_skill / 4);
+						}
+						setConditionSpecialWeapon(target, attacker, weapon, weapon->getCount(), d1_d2, weapon->getDelay());
 					}
 				}
 			}
@@ -991,6 +991,7 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 	uint8_t specialEffect = 0;
 	int32_t attackStrength = 0;
 	int32_t attackVariation = 0;
+	uint32_t d1_d2 = 0;
 
 	Item* weapon = nullptr;
 	Item* ammunition = nullptr;
@@ -1134,6 +1135,13 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 
 		Tile* destTile = target->getTile();
 
+		ConditionType_t conditionType = DamageToConditionType(weapon->getCombatType());
+		ConditionType_t conditionTypeAmmo = DamageToConditionType(ammunition->getCombatType());
+		uint32_t aD1 = ammunition->getDamageA();
+		uint32_t aD2 = ammunition->getDamageB();
+		uint32_t wD1 = weapon->getDamageA();
+		uint32_t wD2 = weapon->getDamageB();
+
 		if (!Position::areInRange<1, 1, 0>(attacker->getPosition(), target->getPosition())) {
 			static std::vector<std::pair<int32_t, int32_t>> destList{
 				{ -1, -1 }, { 0, -1 }, { 1, -1 },
@@ -1179,71 +1187,62 @@ bool Combat::rangeAttack(Creature* attacker, Creature* target, fightMode_t fight
 
 		}
 		else if (hit && specialEffect == 3 && weapon->getWeaponSpecialEffect() != 3) {
-
-			const uint32_t am_we = (ammunition->getAttack() + weapon->getAttack());
-			ConditionType_t conditionType = DamageToConditionType(ammunition->getCombatType());
-
-			switch (conditionType)
-			{
-			case CONDITION_POISON:
-				setConditionSpecialWeapon(target, attacker, ammunition, 20, normal_random(5, 5 + (am_we / 7)), 5);
-				break;
-			case CONDITION_FIRE:
-				setConditionSpecialWeapon(target, attacker, ammunition, 10, normal_random(5, (am_we / 7)), 7);
-				break;
-			case CONDITION_ENERGY:
-				setConditionSpecialWeapon(target, attacker, ammunition, 3, normal_random(10, 10 + (am_we / 5)), 10);
-				break;
-			case CONDITION_PHYSICAL:
-				setConditionSpecialWeapon(target, attacker, ammunition, normal_random(1, (am_we / 7)), normal_random(5, 5 + (am_we / 7.5)), 3);
-				break;
+			if (aD1 && aD2) {
+				d1_d2 = normal_random(aD1, aD2);
 			}
-		}
-		else if (hit && weapon->getWeaponSpecialEffect() == 3 && ammunition->getWeaponSpecialEffect() != 1 && ammunition->getWeaponSpecialEffect() != 2) {
-
-			bool type_arrow = weapon->getAmmoType() == AMMO_ARROW;
-			bool type_bolt = weapon->getAmmoType() == AMMO_BOLT;
-			const uint32_t am_we = (ammunition->getAttack() + weapon->getAttack());
-			ConditionType_t conditionType = DamageToConditionType(weapon->getCombatType());
-			ConditionType_t conditionTypeAmmo = DamageToConditionType(ammunition->getCombatType());
-
-			if (conditionTypeAmmo) {
-				switch (conditionType)
-				{
-				case CONDITION_POISON:
-					setConditionSpecialWeapon(target, attacker, weapon, 20, normal_random(5, 5 + (am_we / 7)), 5, true);
-					break;
-				case CONDITION_FIRE:
-					setConditionSpecialWeapon(target, attacker, weapon, 10, normal_random(5, (am_we / 7)), 7, true);
-					break;
-				case CONDITION_ENERGY:
-					setConditionSpecialWeapon(target, attacker, weapon, 3, normal_random(10, 10 + (am_we / 5)), 10, true);
-					break;
-				case CONDITION_PHYSICAL:
-					setConditionSpecialWeapon(target, attacker, weapon, normal_random(1, (am_we / 7)), normal_random(5, 5 + (am_we / 7.5)), 3, true);
-					break;
-				}
+			else if (aD1 || aD2) {
+				d1_d2 = (aD1 + aD2);
 			}
 			else {
-				switch (conditionType)
-				{
-				case CONDITION_POISON:
-					setConditionSpecialWeapon(target, attacker, weapon, 20, normal_random(5, 5 + (am_we / 7)), 5);
-					break;
-				case CONDITION_FIRE:
-					setConditionSpecialWeapon(target, attacker, weapon, 10, normal_random(5, (am_we / 7)), 7);
-					break;
-				case CONDITION_ENERGY:
-					setConditionSpecialWeapon(target, attacker, weapon, 3, normal_random(10, 10 + (am_we / 5)), 10);
-					break;
-				case CONDITION_PHYSICAL:
-					if (type_bolt) {
-						setConditionSpecialWeapon(target, attacker, weapon, normal_random(1, (am_we / 7)), normal_random(5, 5 + (am_we / 7.5)), 3);
+				if (Player* player = attacker->getPlayer()) {
+					const uint32_t weapon_skill = (player->getBaseSkill(weapon->getWeaponType()) + weapon->getAttack());
+					d1_d2 = normal_random(weapon_skill / 10, weapon_skill / 4);
+				}
+			}
+			setConditionSpecialWeapon(target, attacker, ammunition, ammunition->getCount(), d1_d2, ammunition->getDelay());
+		}
+		else if (hit && weapon->getWeaponSpecialEffect() == 3 && ammunition->getWeaponSpecialEffect() != 1 && ammunition->getWeaponSpecialEffect() != 2) {
+			if (conditionType) {
+				if (conditionTypeAmmo == conditionType) {
+					bool now = true;
+					if (aD1 && aD2) {
+						d1_d2 = normal_random(aD1, aD2);
 					}
-					else if (type_arrow) {
-						setConditionSpecialWeapon(target, attacker, weapon, normal_random(1, (am_we / 7)), normal_random(5, 5 + (am_we / 7.5)), 3);
+					else if (aD1 && wD2) {
+						d1_d2 = normal_random(aD1, wD2);
 					}
-					break;
+					else if (wD1 && aD2) {
+						d1_d2 = normal_random(wD1, aD2);
+					}
+					else if (aD1 && wD1 || aD2 && wD2) {
+						d1_d2 = aD1 ? aD1 +	wD1 : aD2 + wD2;
+						now = false;
+					}
+					else if (aD1 || aD2 || wD1 || wD2) {
+						d1_d2 = aD1 ? aD1 : (aD2 ? aD2 : (wD1 ? wD1 : wD2));
+					}
+					else {
+						if (Player* player = attacker->getPlayer()) {
+							const uint32_t weapon_skill = (player->getBaseSkill(weapon->getWeaponType()) + weapon->getAttack());
+							d1_d2 = normal_random(weapon_skill / 10, weapon_skill / 4);
+						}
+					}
+					setConditionSpecialWeapon(target, attacker, ammunition, ammunition->getCount(), d1_d2, ammunition->getDelay(), now);
+				}
+				else {
+					if (wD1 && wD2) {
+						d1_d2 = normal_random(wD1, wD2);
+					}
+					else if (wD1 || wD2){
+						d1_d2 = wD1 ? wD1 : wD2;
+					}
+					else {
+						if (Player* player = attacker->getPlayer()) {
+							const uint32_t weapon_skill = (player->getBaseSkill(weapon->getWeaponType()) + weapon->getAttack());
+							d1_d2 = normal_random(weapon_skill / 10, weapon_skill / 4);
+						}
+					}
+					setConditionSpecialWeapon(target, attacker, weapon, weapon->getCount(), d1_d2, weapon->getDelay());
 				}
 			}
 		}
@@ -2090,7 +2089,6 @@ void Combat::setConditionSpecialWeapon(Creature* target, Creature* attacker, Ite
 		Damage->setParam(CONDITION_PARAM_SPECIAL, 1);
 		Damage->setParam(CONDITION_PARAM_OWNER, attacker->getID());
 		Damage->setParam(CONDITION_PARAM_COUNT, delay);
-		Damage->setParam(CONDITION_PARAM_MAX_COUNT, delay);
 		Damage->setParam(CONDITION_PARAM_EFFECT, item->getEffectItem());
 	}
 	else {

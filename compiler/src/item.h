@@ -610,6 +610,18 @@ class Item : virtual public Thing
 		uint8_t getRadius() const {
 			return items[id].radiusItem;
 		}
+		uint8_t getCount() const {
+			return items[id].count;
+		}
+		uint8_t getDamageA() const {
+			return items[id].damageA;
+		}
+		uint8_t getDamageB() const {
+			return items[id].damageB;
+		}
+		uint8_t getDelay() const {
+			return items[id].delay;
+		}
 		int32_t getAttackStrength() const {
 			return items[id].attackStrength;
 		}
