@@ -259,6 +259,10 @@ class ItemType
 		uint8_t weaponSpecialEffect = 0;
 		uint8_t effectItem = 0;
 		uint8_t radiusItem = 0;
+		uint8_t count;
+		uint8_t damageA;
+		uint8_t damageB;
+		uint8_t delay;
 
 		bool collisionEvent = false;
 		bool separationEvent = false;

@@ -224,8 +224,6 @@ bool Items::loadItems()
 				}
 			}
 		} else if (identifier == "attributes") {
-			int32_t cycles = 0;
-			int32_t max_value = 0;
 
 			script.readSymbol('{');
 			while (true) {
@@ -518,15 +516,19 @@ bool Items::loadItems()
 							items[id].combatType = combatType;
 							items[id].conditionDamage.reset(conditionDamage);
 						} else {
-							script.error("unknown condition weapon");
+							script.error("unknown custom condition");
 							return false;
 						}
 					} else if (identifier == "count") {
-						cycles = script.readNumber();
-					} else if (identifier == "damage") {
-						max_value = script.readNumber();
+						items[id].count = script.readNumber();
+					} else if (identifier == "damage1") {
+						items[id].damageA = script.readNumber();
+					} else if (identifier == "damage2") {
+						items[id].damageB = script.readNumber();
+					} else if (identifier == "delay") {
+						items[id].delay = script.readNumber();
 					} else {
-						script.error("Unknown attribute");
+						script.error("Unknown custom attribute");
 						return false;
 					}
 				}
