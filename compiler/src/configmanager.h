@@ -84,8 +84,7 @@ class ConfigManager
 			SQL_PORT,
 			MAX_PLAYERS,
 			PZ_LOCKED,
-			DEFAULT_DESPAWNRANGE,
-			DEFAULT_DESPAWNRADIUS,
+			RESPAWNRADIUS,
 			RATE_EXPERIENCE,
 			RATE_SKILL,
 			RATE_LOOT,
@@ -125,6 +124,13 @@ class ConfigManager
 			LAST_INTEGER_CONFIG /* this must be the last one */
 		};
 
+		enum list_config_t {
+			IGNORE_MONSTER_RADIUS,
+			LAST_LIST_CONFIG
+		};
+		const std::list<std::string>& getList(list_config_t whats) const;
+		bool isMonsterIgnored(const std::string& name) const;
+
 		bool load();
 		bool reload();
 
@@ -138,6 +144,10 @@ class ConfigManager
 		static bool getGlobalBoolean(lua_State* L, const char* identifier, const bool defaultValue);
 
 		std::string string[LAST_STRING_CONFIG] = {};
+
+		std::map<list_config_t, std::list<std::string>> listConfigs;  // save list
+		std::list<std::string> loadLuaTable(lua_State* L, const char* identifier);
+
 		int32_t integer[LAST_INTEGER_CONFIG] = {};
 		bool boolean[LAST_BOOLEAN_CONFIG] = {};
 

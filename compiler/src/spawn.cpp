@@ -371,3 +371,11 @@ void Spawn::stopEvent()
 		checkSpawnEvent = 0;
 	}
 }
+
+bool Spawn::stopedSpawnEvent()
+{
+	if (checkSpawnEvent != 0) {
+		return checkSpawnEvent;
+	}
+	return 0;
+}

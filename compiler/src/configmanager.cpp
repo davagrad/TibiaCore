@@ -98,8 +98,7 @@ bool ConfigManager::load()
 
 	integer[MAX_PLAYERS] = getGlobalNumber(L, "maxPlayers");
 	integer[PZ_LOCKED] = getGlobalNumber(L, "pzLocked", 60000);
-	integer[DEFAULT_DESPAWNRANGE] = getGlobalNumber(L, "deSpawnRange", 2);
-	integer[DEFAULT_DESPAWNRADIUS] = getGlobalNumber(L, "deSpawnRadius", 50);
+	integer[RESPAWNRADIUS] = getGlobalNumber(L, "respawnRadius", 200);
 	integer[RATE_EXPERIENCE] = getGlobalNumber(L, "rateExp", 5);
 	integer[RATE_SKILL] = getGlobalNumber(L, "rateSkill", 3);
 	integer[RATE_LOOT] = getGlobalNumber(L, "rateLoot", 2);
@@ -133,6 +132,9 @@ bool ConfigManager::load()
 	integer[TICKS_REGEN_BED_GAIN] = getGlobalNumber(L, "TicksRegenBedGain", 30);
 	integer[RATE_NUTRITION_BED] = getGlobalNumber(L, "RateNutritionBed", 1);
 
+	//config.lua: ignoreMonsters = {"dog", "etc...", "etc...} only lowercase!
+	listConfigs[IGNORE_MONSTER_RADIUS] = loadLuaTable(L, "ignoreMonsters");
+
 	loaded = true;
 	lua_close(L);
 	return true;
@@ -154,6 +156,46 @@ const std::string& ConfigManager::getString(string_config_t what) const
 		return string[DUMMY_STR];
 	}
 	return string[what];
+}
+
+const std::list<std::string>& ConfigManager::getList(list_config_t what) const {
+	auto it = listConfigs.find(what);
+	if (it != listConfigs.end()) {
+		return it->second;
+	}
+	else {
+		static const std::list<std::string> emptyList;
+		std::cout << "[Warning - ConfigManager::getList] Invalid index: " << what << std::endl;
+		return emptyList;
+	}
+}
+
+
+std::list<std::string> ConfigManager::loadLuaTable(lua_State* L, const char* identifier) {
+	std::list<std::string> result;
+
+	lua_getglobal(L, identifier);  // get table from lua
+	if (lua_istable(L, -1)) {  // check if table
+		lua_pushnil(L);  // first key
+
+		while (lua_next(L, -2) != 0) {
+			if (lua_isstring(L, -1)) {  // check is string
+				result.push_back(lua_tostring(L, -1));
+			}
+			lua_pop(L, 1);
+		}
+	}
+	else {
+		std::cout << "[Warning] " << identifier << " is not a table!" << std::endl;
+	}
+
+	lua_pop(L, 1);  // remove table from stacke.
+	return result;
+}
+
+bool ConfigManager::isMonsterIgnored(const std::string& monsterName) const {
+	const std::list<std::string>& ignoreMonsters = getList(IGNORE_MONSTER_RADIUS);
+	return std::find(ignoreMonsters.begin(), ignoreMonsters.end(), monsterName) != ignoreMonsters.end();
 }
 
 int32_t ConfigManager::getNumber(integer_config_t what) const
