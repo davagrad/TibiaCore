@@ -442,21 +442,21 @@ bool Monster::isFriend(const Creature* creature) const
 		const Creature* master = getMaster();
 		if (master && master->getPlayer()) {
 			const Player* masterPlayer = master->getPlayer();
-		const Player* tmpPlayer = nullptr;
+			const Player* tmpPlayer = nullptr;
 
-		if (creature->getPlayer()) {
-			tmpPlayer = creature->getPlayer();
+			if (creature->getPlayer()) {
+				tmpPlayer = creature->getPlayer();
 			}
 			else {
-			const Creature* creatureMaster = creature->getMaster();
-			if (creatureMaster && creatureMaster->getPlayer()) {
-				tmpPlayer = creatureMaster->getPlayer();
+				const Creature* creatureMaster = creature->getMaster();
+				if (creatureMaster && creatureMaster->getPlayer()) {
+					tmpPlayer = creatureMaster->getPlayer();
+				}
 			}
-		}
 
 			if (tmpPlayer && (tmpPlayer == master || masterPlayer->isPartner(tmpPlayer))) {
-			return true;
-		}
+				return true;
+			}
 		}
 	}
 	else if (creature->getMonster() && !creature->isSummon()) {
@@ -756,9 +756,9 @@ void Monster::updateIdleStatus()
 {
 	bool idle = false;
 
-		if (!isSummon() && targetList.empty()) {
-			idle = true;
-		}
+	if (!isSummon() && targetList.empty()) {
+		idle = true;
+	}
 	setIdle(idle);
 }
 
@@ -833,7 +833,7 @@ void Monster::onThink(uint32_t interval)
 		if (!isIdle) {
 			//addEventWalk();
 			if (!isSummon()) {
-			addEventWalk();
+				addEventWalk();
 			}
 
 			if (isSummon()) {
@@ -1934,22 +1934,32 @@ bool Monster::canWalkTo(Position pos, Direction direction) const
 
 void Monster::death(Creature*)
 {
-	// disable to continue target.
-	//setAttackedCreature(nullptr);
-	for (Creature* summon : summons) {
-		// When the master dies, the summons continue for 1500ms and 500ms to change life to black bar, like oldschool.
-		g_scheduler.addEvent(createSchedulerTask(2000, [this, summon]() {
-			summon->changeHealth(-(summon->getHealth() - 1));
-			g_scheduler.addEvent(createSchedulerTask(500, [this, summon]() {
-				g_game.removeCreature(summon);
-				}));
-		}));
+	// When the master dies, the summons continue for 1500ms and 500ms to change life to black bar, like oldschool.
+	std::vector<Creature*> activeSummons;
+	for (Creature* s : summons) {
+		activeSummons.push_back(s);
 	}
-	summons.clear();
-	clearTargetList();
-	clearFriendList();
-	// disable to continue focus.
-	//onIdleStatus();
+    summons.clear();
+
+    for (Creature* summon : activeSummons) {
+        if (summon) {
+			
+            g_scheduler.addEvent(createSchedulerTask(1500, [this, summon]() {
+                if (summon) {
+                    summon->changeHealth(-(summon->getHealth() - 1));
+                    g_scheduler.addEvent(createSchedulerTask(500, [summon]() {
+                        if (summon) {
+                            summon->changeHealth(-summon->getHealth());
+                            summon->setMaster(nullptr);
+                            summon->decrementReferenceCounter();
+                        }
+                    }));
+                }
+            }));
+        }
+    }
+    clearTargetList();
+    clearFriendList();
 }
 
 Item* Monster::getCorpse(Creature* lastHitCreature, Creature* mostDamageCreature)
