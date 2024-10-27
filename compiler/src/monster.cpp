@@ -23,6 +23,7 @@
 #include "game.h"
 #include "spells.h"
 #include "configmanager.h"
+#include "scheduler.h"
 //#include "pugicast.h"
 
 extern ConfigManager g_config;
@@ -359,13 +360,15 @@ void Monster::removeTarget(Creature* creature)
 
 void Monster::updateTargetList()
 {
+	// Change logic for anti-crash summon.
 	auto friendIterator = friendList.begin();
 	while (friendIterator != friendList.end()) {
 		Creature* creature = *friendIterator;
-		if (creature->getHealth() <= 0 || !canSee(creature->getPosition())) {
-			creature->decrementReferenceCounter();
+		if (!creature || creature->getHealth() <= 0 || !canSee(creature->getPosition())) {
+			if (creature) creature->decrementReferenceCounter();
 			friendIterator = friendList.erase(friendIterator);
-		} else {
+		}
+		else {
 			++friendIterator;
 		}
 	}
@@ -373,10 +376,11 @@ void Monster::updateTargetList()
 	auto targetIterator = targetList.begin();
 	while (targetIterator != targetList.end()) {
 		Creature* creature = *targetIterator;
-		if (creature->getHealth() <= 0 || !canSee(creature->getPosition())) {
-			creature->decrementReferenceCounter();
+		if (!creature || creature->getHealth() <= 0 || !canSee(creature->getPosition())) {
+			if (creature) creature->decrementReferenceCounter();
 			targetIterator = targetList.erase(targetIterator);
-		} else {
+		}
+		else {
 			++targetIterator;
 		}
 	}
@@ -434,24 +438,29 @@ void Monster::onCreatureEnter(Creature* creature)
 
 bool Monster::isFriend(const Creature* creature) const
 {
-	if (isSummon() && getMaster()->getPlayer()) {
-		const Player* masterPlayer = getMaster()->getPlayer();
+	// Change logic for anti-crash summon.
+	if (isSummon()) {
+		const Creature* master = getMaster();
+		if (master && master->getPlayer()) {
+			const Player* masterPlayer = master->getPlayer();
 		const Player* tmpPlayer = nullptr;
 
 		if (creature->getPlayer()) {
 			tmpPlayer = creature->getPlayer();
-		} else {
+			}
+			else {
 			const Creature* creatureMaster = creature->getMaster();
-
 			if (creatureMaster && creatureMaster->getPlayer()) {
 				tmpPlayer = creatureMaster->getPlayer();
 			}
 		}
 
-		if (tmpPlayer && (tmpPlayer == getMaster() || masterPlayer->isPartner(tmpPlayer))) {
+			if (tmpPlayer && (tmpPlayer == master || masterPlayer->isPartner(tmpPlayer))) {
 			return true;
 		}
-	} else if (creature->getMonster() && !creature->isSummon()) {
+		}
+	}
+	else if (creature->getMonster() && !creature->isSummon()) {
 		return true;
 	}
 
@@ -695,10 +704,6 @@ bool Monster::isTarget(const Creature* creature) const
 	        creature->getZone() == ZONE_PROTECTION || !canSeeCreature(creature)) {
 		return false;
 	}
-
-	if (creature->getPosition().z != getPosition().z) {
-		return false;
-	}
 	return true;
 }
 
@@ -752,12 +757,9 @@ void Monster::updateIdleStatus()
 {
 	bool idle = false;
 
-	if (conditions.empty()) {
 		if (!isSummon() && targetList.empty()) {
 			idle = true;
 		}
-	}
-
 	setIdle(idle);
 }
 
@@ -819,19 +821,25 @@ void Monster::onThink(uint32_t interval)
 		updateIdleStatus();
 
 		if (!isIdle) {
+			//addEventWalk();
+			if (!isSummon()) {
 			addEventWalk();
+			}
 
 			if (isSummon()) {
 				if (!attackedCreature) {
 					if (getMaster() && getMaster()->getAttackedCreature()) {
 						selectTarget(getMaster()->getAttackedCreature());
-					} else if (getMaster() != followCreature) {
+					}
+					else if (getMaster() != followCreature) {
 						//Our master has not ordered us to attack anything, lets follow him around instead.
 						setFollowCreature(getMaster());
 					}
-				} else if (attackedCreature == this) {
+				}
+				else if (attackedCreature == this) {
 					setFollowCreature(nullptr);
-				} else if (followCreature != attackedCreature) {
+				}
+				else if (followCreature != attackedCreature) {
 					setFollowCreature(attackedCreature);
 				}
 
@@ -843,10 +851,12 @@ void Monster::onThink(uint32_t interval)
 						}
 					}
 				}
-			} else if (!targetList.empty()) {
+			}
+			else if (!targetList.empty()) {
 				if (!followCreature || !hasFollowPath) {
 					searchTarget(TARGETSEARCH_ANY);
-				} else if (isFleeing()) {
+				}
+				else if (isFleeing()) {
 					if (attackedCreature && !canUseAttack(getPosition(), attackedCreature)) {
 						searchTarget(TARGETSEARCH_NEAREST);
 					}
@@ -1914,18 +1924,22 @@ bool Monster::canWalkTo(Position pos, Direction direction) const
 
 void Monster::death(Creature*)
 {
-	setAttackedCreature(nullptr);
-
+	// disable to continue target.
+	//setAttackedCreature(nullptr);
 	for (Creature* summon : summons) {
-		summon->changeHealth(-summon->getHealth());
-		summon->setMaster(nullptr);
-		summon->decrementReferenceCounter();
+		// When the master dies, the summons continue for 1500ms and 500ms to change life to black bar, like oldschool.
+		g_scheduler.addEvent(createSchedulerTask(2000, [this, summon]() {
+			summon->changeHealth(-(summon->getHealth() - 1));
+			g_scheduler.addEvent(createSchedulerTask(500, [this, summon]() {
+				g_game.removeCreature(summon);
+				}));
+		}));
 	}
 	summons.clear();
-
 	clearTargetList();
 	clearFriendList();
-	onIdleStatus();
+	// disable to continue focus.
+	//onIdleStatus();
 }
 
 Item* Monster::getCorpse(Creature* lastHitCreature, Creature* mostDamageCreature)
