@@ -173,8 +173,7 @@ void Game::saveGameState(bool crash /*= false*/)
 
 bool Game::loadMainMap(const std::string& filename)
 {
-	Monster::despawnRange = g_config.getNumber(ConfigManager::DEFAULT_DESPAWNRANGE);
-	Monster::despawnRadius = g_config.getNumber(ConfigManager::DEFAULT_DESPAWNRADIUS);
+	Monster::respawnRadius = g_config.getNumber(ConfigManager::RESPAWNRADIUS);
 	return map.loadMap("data/world/" + filename + ".otbm", true);
 }
 
@@ -3391,37 +3390,6 @@ void Game::combatGetTypeInfo(CombatType_t combatType, Creature* target, TextColo
 		case COMBAT_FIREDAMAGE: {
 			color = TEXTCOLOR_ORANGE;
 			effect = CONST_ME_HITBYFIRE;
-			break;
-		}
-
-		case COMBAT_CUSTOM_PHYSICAL: {
-			Item* splash = nullptr;
-			switch (target->getRace()) {
-			case RACE_VENOM:
-				color = TEXTCOLOR_LIGHTGREEN;
-				splash = Item::CreateItem(ITEM_SMALLSPLASH, FLUID_SLIME);
-				break;
-			case RACE_BLOOD:
-				color = TEXTCOLOR_RED;
-				splash = Item::CreateItem(ITEM_SMALLSPLASH, FLUID_BLOOD);
-				break;
-			case RACE_UNDEAD:
-				color = TEXTCOLOR_LIGHTGREY;
-				break;
-			case RACE_FIRE:
-				color = TEXTCOLOR_ORANGE;
-				break;
-			default:
-				color = TEXTCOLOR_NONE;
-				effect = CONST_ME_NONE;
-				break;
-			}
-
-			if (splash) {
-				internalAddItem(target->getTile(), splash, INDEX_WHEREEVER, FLAG_NOLIMIT);
-				startDecay(splash);
-			}
-
 			break;
 		}
 
