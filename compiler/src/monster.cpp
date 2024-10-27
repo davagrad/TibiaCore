@@ -30,8 +30,7 @@ extern ConfigManager g_config;
 extern Game g_game;
 extern Monsters g_monsters;
 
-int32_t Monster::despawnRange;
-int32_t Monster::despawnRadius;
+int32_t Monster::respawnRadius;
 
 uint32_t Monster::monsterAutoID = 0x40000000;
 
@@ -813,10 +812,21 @@ void Monster::onThink(uint32_t interval)
 		}
 	}
 
-	if (!isInSpawnRange(position) || (lifetime > 0 && (OTSYS_TIME() >= lifetime))) {
-		// Despawn creatures if they are out of their spawn zone
+	if (lifetime > 0 && (OTSYS_TIME() >= lifetime))
+	{
+		// Despawn creatures if they are out lifetime from raids.
 		g_game.removeCreature(this);
 		g_game.addMagicEffect(getPosition(), CONST_ME_POFF);
+	}
+	else if (!isInSpawnRange(position) && !isSummon() && spawn && !spawn->stopedSpawnEvent()) 
+	{
+		// Respawn creatures if they are out of their spawn zone.
+		if (!g_config.isMonsterIgnored(this->getName())) {
+			spawn->removeMonster(this);
+			spawn->stopEvent();
+			spawn->startSpawnCheck();
+		}
+
 	} else {
 		updateIdleStatus();
 
@@ -1966,22 +1976,9 @@ bool Monster::isInSpawnRange(const Position& pos) const
 		return true;
 	}
 
-	if (Monster::despawnRadius == 0) {
-		return true;
+	if (respawnRadius > 0 && !Spawns::isInZone(masterPos, respawnRadius, pos)) {
+		return false;
 	}
-
-	if (!Spawns::isInZone(masterPos, Monster::despawnRadius, pos)) {
-		return true;
-	}
-
-	if (Monster::despawnRange == 0) {
-		return true;
-	}
-
-	if (Position::getDistanceZ(pos, masterPos) > Monster::despawnRange) {
-		return true;
-	}
-
 	return true;
 }
 
