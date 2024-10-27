@@ -43,8 +43,7 @@ class Monster final : public Creature
 {
 	public:
 		static Monster* createMonster(const std::string& name);
-		static int32_t despawnRange;
-		static int32_t despawnRadius;
+		static int32_t respawnRadius;
 
 		explicit Monster(MonsterType* mtype);
 		~Monster();
