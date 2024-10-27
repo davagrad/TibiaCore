@@ -3104,7 +3104,7 @@ void Player::onAddCombatCondition(ConditionType_t type)
 		sendTextMessage(MESSAGE_STATUS_DEFAULT, "You are electrified.");
 		break;
 
-		case CONDITION_CUSTOM_PHYSICAL:
+		case CONDITION_PHYSICAL:
 		sendTextMessage(MESSAGE_STATUS_DEFAULT, "You are cursed.");
 		break;
 
