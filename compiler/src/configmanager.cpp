@@ -78,14 +78,20 @@ bool ConfigManager::load()
 	boolean[TELEPORT_NEWBIES] = getGlobalBoolean(L, "teleportNewbies", true);
 	boolean[STACK_CUMULATIVES] = getGlobalBoolean(L, "autoStackCumulatives", false);
 	boolean[QUERY_PLAYER_CONTAINERS] = getGlobalBoolean(L, "queryPlayerContainers", false);
-	boolean[RESTORE_UPLEVEL_FREE] = getGlobalBoolean(L, "UpLevelRestoreFree", false);
-	boolean[RESTORE_UPLEVEL_PREMIUM] = getGlobalBoolean(L, "UpLevelRestorePremium", false);
-	boolean[DROP_SPEAR_FREE] = getGlobalBoolean(L, "DropSpearFree", true);
-	boolean[DROP_SPEAR_PREMIUM] = getGlobalBoolean(L, "DropSpearPremium", true);
-	boolean[MAKE_RUNE_BACKPACK_FREE] = getGlobalBoolean(L, "MakeRuneBackpackFree", false);
-	boolean[MAKE_RUNE_BACKPACK_PREMIUM] = getGlobalBoolean(L, "MakeRuneBackpackPremium", false);
+	boolean[RESTORE_UPLEVEL_FREE] = getGlobalBoolean(L, "upLevelRestoreFree", false);
+	boolean[RESTORE_UPLEVEL_PREMIUM] = getGlobalBoolean(L, "upLevelRestorePremium", false);
+	boolean[DROP_SPEAR_FREE] = getGlobalBoolean(L, "dropSpearFree", true);
+	boolean[DROP_SPEAR_PREMIUM] = getGlobalBoolean(L, "dropSpearPremium", true);
+	boolean[MAKE_RUNE_BACKPACK_FREE] = getGlobalBoolean(L, "makeRuneBackpackFree", false);
+	boolean[MAKE_RUNE_BACKPACK_PREMIUM] = getGlobalBoolean(L, "makeRuneBackpackPremium", false);
 	boolean[ENABLE_LIVE_CASTING] = getGlobalBoolean(L, "enableLiveCasting", false);
-	boolean[SAVE_PLAYERS_LOGS] = getGlobalBoolean(L, "SavePlayersLogs", false);
+	boolean[SAVE_PLAYERS_LOGS] = getGlobalBoolean(L, "savePlayersLogs", false);
+	boolean[ENABLE_ACCOUNT_BONUS] = getGlobalBoolean(L, "enableAccountBonus", false);
+	boolean[IGNORE_BLOCK_RESPAWN] = getGlobalBoolean(L, "ignoreBlockRespawn", false);
+	boolean[TRIGGER_RESPAWN_EFFECT] = getGlobalBoolean(L, "triggerRespawnEffect", false);
+	boolean[FIRST_PAY_RENT_ON_FINAL_BID] = getGlobalBoolean(L, "firstPayRentOnFinalBid", false);
+	boolean[ATTACKERPARTYENTERPZ] = getGlobalBoolean(L, "attackerPartyEnterPz", false);
+	boolean[MEMBERSAFESKULLGUILD] = getGlobalBoolean(L, "memberSafeSkullGuild", false);
 
 	string[DEFAULT_PRIORITY] = getGlobalString(L, "defaultPriority", "high");
 	string[SERVER_NAME] = getGlobalString(L, "serverName", "");
@@ -103,7 +109,7 @@ bool ConfigManager::load()
 	integer[RATE_SKILL] = getGlobalNumber(L, "rateSkill", 3);
 	integer[RATE_LOOT] = getGlobalNumber(L, "rateLoot", 2);
 	integer[RATE_MAGIC] = getGlobalNumber(L, "rateMagic", 3);
-	integer[RATE_SPAWN] = getGlobalNumber(L, "rateSpawn", 1);
+	integer[RATE_SPAWN_PERCENT] = getGlobalNumber(L, "rateSpawnPercent", 0);
 	integer[BAN_LENGTH] = getGlobalNumber(L, "banLength", 30 * 24 * 60 * 60);
 	integer[ACTIONS_DELAY_INTERVAL] = getGlobalNumber(L, "timeBetweenActions", 200);
 	integer[EX_ACTIONS_DELAY_INTERVAL] = getGlobalNumber(L, "timeBetweenExActions", 1000);
@@ -127,10 +133,16 @@ bool ConfigManager::load()
 	integer[NEWBIE_LEVEL_THRESHOLD] = getGlobalNumber(L, "newbieLevelThreshold", 5);
 	integer[MONEY_RATE] = getGlobalNumber(L, "moneyRate", 1);
 	integer[HOUSE_PRICE] = getGlobalNumber(L, "multiHousePricebyRent", 1);
-	integer[RATE_LIFE_BED] = getGlobalNumber(L, "RateLifeBed", 1);
-	integer[RATE_MANA_BED] = getGlobalNumber(L, "RateManaBed", 1);
-	integer[TICKS_REGEN_BED_GAIN] = getGlobalNumber(L, "TicksRegenBedGain", 30);
-	integer[RATE_NUTRITION_BED] = getGlobalNumber(L, "RateNutritionBed", 1);
+	integer[RATE_LIFE_BED] = getGlobalNumber(L, "rateLifeBed", 1);
+	integer[RATE_MANA_BED] = getGlobalNumber(L, "rateManaBed", 1);
+	integer[TICKS_REGEN_BED_GAIN] = getGlobalNumber(L, "ticksRegenBedGain", 30);
+	integer[RATE_NUTRITION_BED] = getGlobalNumber(L, "rateNutritionBed", 1);
+	integer[PERCENT_CAST_EXP] = getGlobalNumber(L, "percentCastExp", 0);
+	integer[PERCENT_PREMIUM_EXP] = getGlobalNumber(L, "percentPremiumExp", 0);
+	integer[PERCENT_BONUS_COPPER] = getGlobalNumber(L, "percentBonusCopper", 0);
+	integer[PERCENT_BONUS_SILVER] = getGlobalNumber(L, "percentBonusSilver", 0);
+	integer[PERCENT_BONUS_GOLD] = getGlobalNumber(L, "percentBonusGold", 0);
+	integer[BAN_ACCOUNT_FROM_BID_DAY] = getGlobalNumber(L, "daysBanAccountFromBid", 0);
 
 	//config.lua: ignoreMonsters = {"dog", "etc...", "etc...} only lowercase!
 	listConfigs[IGNORE_MONSTER_RADIUS] = loadLuaTable(L, "ignoreMonsters");
