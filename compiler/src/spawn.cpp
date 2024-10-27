@@ -91,11 +91,13 @@ bool Spawns::loadFromXml(const std::string& filename)
 
 				uint32_t interval = pugi::cast<uint32_t>(childNode.attribute("spawntime").value()) * 1000;
 				if (interval > MINSPAWN_INTERVAL) {
-					uint32_t exInterval = g_config.getNumber(ConfigManager::RATE_SPAWN);
-					uint32_t reSpawn = exInterval / interval;
-					if (exInterval > 1) {
-						if (reSpawn < static_cast<uint32_t>(MINSPAWN_INTERVAL)) {
-							reSpawn = static_cast<uint32_t>(MINSPAWN_INTERVAL);
+
+					uint32_t percent = g_config.getNumber(ConfigManager::RATE_SPAWN_PERCENT);
+					if (percent > 0 && percent <= 100) {
+
+						uint32_t reSpawn = interval - (interval * percent / 100);
+						if (reSpawn < MINSPAWN_INTERVAL) {
+							reSpawn = MINSPAWN_INTERVAL;
 						}
 						spawn.addMonster(nameAttribute.as_string(), pos, dir, reSpawn);
 					}
@@ -272,10 +274,34 @@ std::queue<std::string>& Spawn::getSpawnQueue()
 	return SpawnQueue;
 }
 
+bool Spawn::triggerRespawn(uint32_t spawnId, MonsterType* mType, const Position& pos, Direction dir, int repeatCount)
+{
+	triggerScheduled[spawnId] = true;
+	if (g_config.getBoolean(ConfigManager::TRIGGER_RESPAWN_EFFECT))
+	{ 
+		g_game.addMagicEffect(pos, CONST_ME_TELEPORT);
+	}
+	else {
+		repeatCount = 0;
+	}
+
+	if (repeatCount > 0) {
+		g_scheduler.addEvent(createSchedulerTask(2000, std::bind(
+			&Spawn::triggerRespawn, this, spawnId, mType, pos, dir, repeatCount - 1
+		)));
+	}
+
+	if (repeatCount == 0) {
+		spawnMonster(spawnId, mType, pos, dir);
+		triggerScheduled.erase(spawnId);
+	}
+	return true;
+}
+
 void Spawn::checkSpawn()
 {
+	bool confResp = g_config.getBoolean(ConfigManager::IGNORE_BLOCK_RESPAWN);
 	checkSpawnEvent = 0;
-
 	cleanup();
 
 	for (auto& it : spawnMap) {
@@ -286,23 +312,46 @@ void Spawn::checkSpawn()
 
 		spawnBlock_t& sb = it.second;
 		if (OTSYS_TIME() >= sb.lastSpawn + sb.interval) {
-			if (findPlayer(sb.pos)) {
+			if (findPlayer(sb.pos) && !confResp) {
 				sb.lastSpawn = OTSYS_TIME();
 				continue;
 			}
 			else if (sb.mType->extraChance != 0 && Monsters::getLootRandom() <= sb.mType->extraChance) {
+				if (confResp) {
+					if (!triggerScheduled[spawnId]) {
+						triggerRespawn(spawnId, g_monsters.getMonsterType(sb.mType->extraMonster), sb.pos, sb.direction, 3);
+					}
+				}
+				else {
 				spawnMonster(spawnId, g_monsters.getMonsterType(sb.mType->extraMonster), sb.pos, sb.direction);
+				}
 				sb.lastSpawn = OTSYS_TIME();
 			}
 			else if (!SpawnQueue.empty()) {
+				// Isso adiciona um monstro extra atraves de lua scripts.
 				if (sb.mType->extraMonster == SpawnQueue.front()) {
+					if (confResp) {
+						if (!triggerScheduled[spawnId]) {
+							triggerRespawn(spawnId, g_monsters.getMonsterType(SpawnQueue.front()), sb.pos, sb.direction, 3);
+						}
+					}
+					else {
 					spawnMonster(spawnId, g_monsters.getMonsterType(SpawnQueue.front()), sb.pos, sb.direction);
+					}
 					SpawnQueue.pop();
 					sb.lastSpawn = OTSYS_TIME();
 				}
 			}
 			else {
+				if (confResp) {
+					if (!triggerScheduled[spawnId]) {
+						triggerRespawn(spawnId, sb.mType, sb.pos, sb.direction, 3);
+					}
+				}
+				else {
 				spawnMonster(spawnId, sb.mType, sb.pos, sb.direction);
+			}
+				sb.lastSpawn = OTSYS_TIME();
 			}
 		}
 	}

@@ -56,6 +56,7 @@ class Spawn
 		static std::queue<std::string>& getSpawnQueue();
 
 		bool isInSpawnZone(const Position& pos);
+		bool stopedSpawnEvent();
 		void cleanup();
 
 	private:
@@ -72,9 +73,11 @@ class Spawn
 
 		uint32_t interval = 60000;
 		uint32_t checkSpawnEvent = 0;
+		std::unordered_map<uint32_t, bool> triggerScheduled;
 
 		static bool findPlayer(const Position& pos);
 		bool spawnMonster(uint32_t spawnId, MonsterType* mType, const Position& pos, Direction dir, bool startup = false);
+		bool triggerRespawn(uint32_t spawnId, MonsterType* mType, const Position& pos, Direction dir, int repeatCount);
 		void checkSpawn();
 };
 
