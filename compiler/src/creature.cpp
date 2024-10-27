@@ -50,19 +50,10 @@ Creature::~Creature()
 
 bool Creature::canSee(const Position& myPos, const Position& pos, int32_t viewRangeX, int32_t viewRangeY)
 {
-	if (myPos.z <= 7) {
-		//we are on ground level or above (7 -> 0)
-		//view is from 7 -> 0
-		if (pos.z > 7) {
+	// Set monsters stoped when it cannot see players on the same floor!
+	if (Position::getDistanceZ(myPos, pos) > 0) {
 			return false;
 		}
-	} else if (myPos.z >= 8) {
-		//we are underground (8 -> 15)
-		//view is +/- 2 from the floor we stand on
-		if (Position::getDistanceZ(myPos, pos) > 2) {
-			return false;
-		}
-	}
 
 	const int_fast32_t offsetz = myPos.getZ() - pos.getZ();
 	return (pos.getX() >= myPos.getX() - viewRangeX + offsetz) && (pos.getX() <= myPos.getX() + viewRangeX + offsetz)

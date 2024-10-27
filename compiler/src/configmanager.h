@@ -53,6 +53,8 @@ class ConfigManager
 			MAKE_RUNE_BACKPACK_PREMIUM,
 			ENABLE_LIVE_CASTING,
 			SAVE_PLAYERS_LOGS,
+			IGNORE_BLOCK_RESPAWN,
+			TRIGGER_RESPAWN_EFFECT,
 
 			LAST_BOOLEAN_CONFIG /* this must be the last one */
 		};
