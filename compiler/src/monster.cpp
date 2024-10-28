@@ -1934,32 +1934,16 @@ bool Monster::canWalkTo(Position pos, Direction direction) const
 
 void Monster::death(Creature*)
 {
-	// When the master dies, the summons continue for 1500ms and 500ms to change life to black bar, like oldschool.
-	std::vector<Creature*> activeSummons;
-	for (Creature* s : summons) {
-		activeSummons.push_back(s);
-	}
-    summons.clear();
-
-    for (Creature* summon : activeSummons) {
-        if (summon) {
-			
-            g_scheduler.addEvent(createSchedulerTask(1500, [this, summon]() {
-                if (summon) {
-                    summon->changeHealth(-(summon->getHealth() - 1));
-                    g_scheduler.addEvent(createSchedulerTask(500, [summon]() {
-                        if (summon) {
+	setAttackedCreature(nullptr);
+	for (Creature* summon : summons) {
                             summon->changeHealth(-summon->getHealth());
                             summon->setMaster(nullptr);
                             summon->decrementReferenceCounter();
                         }
-                    }));
-                }
-            }));
-        }
-    }
+	summons.clear();
     clearTargetList();
     clearFriendList();
+	onIdleStatus();
 }
 
 Item* Monster::getCorpse(Creature* lastHitCreature, Creature* mostDamageCreature)
