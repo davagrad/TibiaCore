@@ -697,6 +697,8 @@ void Houses::auctionsHouses(RentPeriod_t rentPeriod) const
 	time_t currentTime;
 	Database* db = Database::getInstance();
 	DBResult_ptr result = db->storeQuery("SELECT `id`, `rent`, `town_id`, `bid_end`, `last_bid`, `highest_bidder` FROM `houses` WHERE `bid_end` > 0");
+	int32_t banDay = g_config.getNumber(ConfigManager::BAN_ACCOUNT_FROM_BID_DAY);
+	bool payRent = g_config.getBoolean(ConfigManager::FIRST_PAY_RENT_ON_FINAL_BID);
 
 	if (result) {
 		do {
@@ -708,6 +710,7 @@ void Houses::auctionsHouses(RentPeriod_t rentPeriod) const
 				const uint32_t rent = result->getNumber<uint32_t>("rent");
 				const uint32_t ownerId = result->getNumber<uint32_t>("highest_bidder");
 				const uint32_t balance = result->getNumber<uint32_t>("last_bid");
+				uint32_t rentTotal = 0;
 
 				Player player(nullptr);
 				if (!IOLoginData::loadPlayerById(&player, ownerId)) {
@@ -725,13 +728,21 @@ void Houses::auctionsHouses(RentPeriod_t rentPeriod) const
 					}
 
 					bool bankMoney = false;
-					if (player.getBankBalance() >= (balance + rent)) {
+
+					if (payRent) {
+						rentTotal = balance + rent;
+					}
+					else {
+						rentTotal = balance;
+					}
+
+					if (player.getBankBalance() >= (rentTotal)) {
 						bankMoney = true;
 					}
-					if (bankMoney || (g_game.removeMoney(player.getDepotLocker(house->getTownId(), true), balance + rent, FLAG_NOLIMIT) && !bankMoney)) {
-						
+
+					if (bankMoney || (g_game.removeMoney(player.getDepotLocker(house->getTownId(), true), rentTotal, FLAG_NOLIMIT) && !bankMoney)) {
 						if (bankMoney) {
-							player.setBankBalance(player.getBankBalance() - (balance + rent));
+							player.setBankBalance(player.getBankBalance() - (rentTotal));
 						}
 
 						time_t paidUntil = currentTime;
@@ -751,8 +762,9 @@ void Houses::auctionsHouses(RentPeriod_t rentPeriod) const
 						default:
 							break;
 						}
+
 						std::ostringstream ss;
-						ss << "Congratulations!\nYou won the auction.\n" << balance + rent << " amount of gold has been removed\nfrom your deposit.\nAdvance rent!\nRemember to save your rent money.";
+						ss << "Congratulations!\nYou won the auction.\n" << rentTotal << " gold has been deducted\nfrom your " << (bankMoney ? "bank balance" : "depot") << (payRent ? " as advance rent" : "") << ".\nRemember to save up for future rent payments.";
 						letter->setText(ss.str());
 						g_game.internalAddItem(player.getDepotLocker(house->getTownId(), true), letter, INDEX_WHEREEVER, FLAG_NOLIMIT);
 
@@ -761,21 +773,23 @@ void Houses::auctionsHouses(RentPeriod_t rentPeriod) const
 						db->executeQuery(query.str());
 						house->setPaidUntil(paidUntil);
 						house->setOwner(ownerId, true, &player);
-						std::cout << ">> House auction (" << id << ") set to " << player.getName() << (bankMoney ? ". Withdraw bank money: " : ". Withdraw depot money: ") << balance + rent << "." << std::endl;
+						std::cout << ">> House auction (" << id << ") set for " << player.getName() << ", payment from " << (bankMoney ? "bank: " : "depot: ") << rentTotal << " gold." << std::endl;
 					}
 					else {
-						std::ostringstream ss;
-						ss << "Your account has been blocked for 7 days\nfrom houses auctions.\nDue to lack of money in the deposit.";
-						letter->setText(ss.str());
-						g_game.internalAddItem(player.getDepotLocker(house->getTownId(), true), letter, INDEX_WHEREEVER, FLAG_NOLIMIT);
-
 						std::ostringstream query;
-						query << "UPDATE `accounts` SET `house_block` = " << std::to_string(currentTime += 24 * 60 * 60 * 7) << " WHERE id = (SELECT account_id FROM players WHERE id = " << ownerId << ")";
-						db->executeQuery(query.str());
-						query.str("");
+						if (banDay > 0) {
+							std::ostringstream ss;
+							ss << "Your account has been blocked from house auctions for " << banDay << " day(s)\n due to insufficient " << rentTotal << " gold missing in your " << (bankMoney ? "bank balance." : "depot.");
+							letter->setText(ss.str());
+							g_game.internalAddItem(player.getDepotLocker(house->getTownId(), true), letter, INDEX_WHEREEVER, FLAG_NOLIMIT);
+
+							query << "UPDATE `accounts` SET `house_block` = " << std::to_string(currentTime += 24 * 60 * 60 * banDay) << " WHERE id = (SELECT account_id FROM players WHERE id = " << ownerId << ")";
+							db->executeQuery(query.str());
+							query.str("");
+						}
 						query << "UPDATE `houses` SET `owner` = 0, `bid` = 0, `bid_end` = 0, `last_bid` = 0, `highest_bidder` = 0  WHERE `id` = " << id;
 						db->executeQuery(query.str());
-						std::cout << ">> House auction (" << id << ") remove from " << player.getName() << ". Player not have money" << (bankMoney ? ". Bank money: " : ". Depot money: ") << balance + rent << "." << std::endl;
+						std::cout << ">> House auction (" << id << ") failed for " << player.getName() << " due to insufficient " << rentTotal << " gold in the " << (bankMoney ? "bank." : "depot.") << std::endl;
 						query.str("");
 					}
 					IOLoginData::savePlayer(&player);
@@ -783,5 +797,5 @@ void Houses::auctionsHouses(RentPeriod_t rentPeriod) const
 			}
 		} while (result->next());
 	}
-	std::cout << ">> Houses Auctions: Done! " << std::endl;
+	std::cout << ">> Houses Auctions:" << (payRent ? " Advance rent enable!" : " Advance rent disable!") << (banDay > 0 ? " | Trolling auction ban for " + std::to_string(banDay) + " day(s)! " : " | Trolling auction ban disable!") << std::endl;
 }

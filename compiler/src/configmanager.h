@@ -55,6 +55,7 @@ class ConfigManager
 			SAVE_PLAYERS_LOGS,
 			IGNORE_BLOCK_RESPAWN,
 			TRIGGER_RESPAWN_EFFECT,
+			FIRST_PAY_RENT_ON_FINAL_BID,
 
 			LAST_BOOLEAN_CONFIG /* this must be the last one */
 		};
@@ -122,6 +123,7 @@ class ConfigManager
 			RATE_MANA_BED,
 			TICKS_REGEN_BED_GAIN,
 			RATE_NUTRITION_BED,
+			BAN_ACCOUNT_FROM_BID_DAY,
 
 			LAST_INTEGER_CONFIG /* this must be the last one */
 		};
