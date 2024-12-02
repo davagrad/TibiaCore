@@ -8,6 +8,7 @@ function onTargetCreature(creature, target)
 	
 	local condition = Condition(CONDITION_POISON)
 	condition:setTiming(computeFormula(player:getLevel(), player:getMagicLevel(), 70, 20))
+	condition:setParameter(CONDITION_PARAM_OWNER, player:getId())
 	target:addCondition(condition)
 end
 
