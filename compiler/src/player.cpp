@@ -2244,7 +2244,6 @@ ReturnValue Player::queryAdd(int32_t index, const Thing& thing, uint32_t count, 
 			return RETURNVALUE_CANNOTBEDRESSED;
 		}*/
 		}
-	}
 	return ret;
 }
 

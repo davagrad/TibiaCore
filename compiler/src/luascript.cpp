@@ -1064,7 +1064,7 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(COMBAT_PARAM_MAXIMUMDECREASEDDAMAGE)
 
 	registerEnum(CONDITION_NONE)
-	registerEnum(CONDITION_CUSTOM_PHYSICAL)
+	registerEnum(CONDITION_PHYSICAL)
 	registerEnum(CONDITION_POISON)
 	registerEnum(CONDITION_FIRE)
 	registerEnum(CONDITION_ENERGY)
