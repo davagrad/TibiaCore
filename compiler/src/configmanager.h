@@ -56,6 +56,8 @@ class ConfigManager
 			IGNORE_BLOCK_RESPAWN,
 			TRIGGER_RESPAWN_EFFECT,
 			FIRST_PAY_RENT_ON_FINAL_BID,
+			ATTACKERPARTYENTERPZ,
+			MEMBERSAFESKULLGUILD,
 
 			LAST_BOOLEAN_CONFIG /* this must be the last one */
 		};
@@ -92,7 +94,7 @@ class ConfigManager
 			RATE_SKILL,
 			RATE_LOOT,
 			RATE_MAGIC,
-			RATE_SPAWN,
+			RATE_SPAWN_PERCENT,
 			BAN_LENGTH,
 			MAX_MESSAGEBUFFER,
 			ACTIONS_DELAY_INTERVAL,
@@ -137,7 +139,7 @@ class ConfigManager
 
 		bool load();
 		bool reload();
-
+		
 		const std::string& getString(string_config_t what) const;
 		int32_t getNumber(integer_config_t what) const;
 		bool getBoolean(boolean_config_t what) const;

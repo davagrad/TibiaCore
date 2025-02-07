@@ -86,7 +86,6 @@ bool ConfigManager::load()
 	boolean[MAKE_RUNE_BACKPACK_PREMIUM] = getGlobalBoolean(L, "makeRuneBackpackPremium", false);
 	boolean[ENABLE_LIVE_CASTING] = getGlobalBoolean(L, "enableLiveCasting", false);
 	boolean[SAVE_PLAYERS_LOGS] = getGlobalBoolean(L, "savePlayersLogs", false);
-	boolean[ENABLE_ACCOUNT_BONUS] = getGlobalBoolean(L, "enableAccountBonus", false);
 	boolean[IGNORE_BLOCK_RESPAWN] = getGlobalBoolean(L, "ignoreBlockRespawn", false);
 	boolean[TRIGGER_RESPAWN_EFFECT] = getGlobalBoolean(L, "triggerRespawnEffect", false);
 	boolean[FIRST_PAY_RENT_ON_FINAL_BID] = getGlobalBoolean(L, "firstPayRentOnFinalBid", false);
@@ -137,11 +136,6 @@ bool ConfigManager::load()
 	integer[RATE_MANA_BED] = getGlobalNumber(L, "rateManaBed", 1);
 	integer[TICKS_REGEN_BED_GAIN] = getGlobalNumber(L, "ticksRegenBedGain", 30);
 	integer[RATE_NUTRITION_BED] = getGlobalNumber(L, "rateNutritionBed", 1);
-	integer[PERCENT_CAST_EXP] = getGlobalNumber(L, "percentCastExp", 0);
-	integer[PERCENT_PREMIUM_EXP] = getGlobalNumber(L, "percentPremiumExp", 0);
-	integer[PERCENT_BONUS_COPPER] = getGlobalNumber(L, "percentBonusCopper", 0);
-	integer[PERCENT_BONUS_SILVER] = getGlobalNumber(L, "percentBonusSilver", 0);
-	integer[PERCENT_BONUS_GOLD] = getGlobalNumber(L, "percentBonusGold", 0);
 	integer[BAN_ACCOUNT_FROM_BID_DAY] = getGlobalNumber(L, "daysBanAccountFromBid", 0);
 
 	//config.lua: ignoreMonsters = {"dog", "etc...", "etc...} only lowercase!
