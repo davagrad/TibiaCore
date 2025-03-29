@@ -1,5 +1,5 @@
 # How Compiler
-### Microsoft Visual Studio 2017 for Windows
+### Microsoft Visual Studio 2017 or higher for Windows
 <details>
 <summary>Windows/VCPKG Commands</summary>
   
