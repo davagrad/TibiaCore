@@ -20,6 +20,7 @@ And copiler project!
 <summary>Ubuntu Commands</summary>
   
 ```bash
+sudo apt update && sudo apt upgrade -y
 sudo apt install git cmake build-essential libluajit-5.1-dev libmariadb-dev-compat libboost-date-time-dev libboost-filesystem-dev libboost-system-dev libboost-iostreams-dev libpugixml-dev libgmp3-dev libcrypto++-dev libfmt-dev libjsoncpp-dev
 git clone https://github.com/RCP91/TibiaCore.git
 cd TibiaCore/compiler
