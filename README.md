@@ -27,6 +27,10 @@ cd TibiaCore/compiler
 mkdir build && cd build
 cmake ..
 make
+cd ../../ && cp -r compiler/build/tfs TibiaCore
+ls
+for run with screen and auto restart: screen ./restart.sh
+or ./TibiaCore
 ```
 ### GCC Build Anti-RollBack for Ubuntu
 <details>
