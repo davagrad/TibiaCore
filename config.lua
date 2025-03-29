@@ -28,7 +28,7 @@ showMonsterLoot = true
 queryPlayerContainers = true
 exhaustionNPC = true
 exhaustionInSecondsNPC = 1
-SavePlayersLogs = true
+savePlayersLogs = true
 
 -- Deaths
 -- NOTE: Leave deathLosePercent as -1 if you want to use the default
