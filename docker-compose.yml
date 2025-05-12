@@ -1,0 +1,53 @@
+services:
+  db:
+    image: mariadb:10.6
+    container_name: tibiacore_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: StrongRootPassword!
+      MYSQL_DATABASE: tibiacore
+      MYSQL_USER: tfsuser
+      MYSQL_PASSWORD: StrongUserPassword!
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - tibiacore_net
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-pStrongRootPassword!"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  tfs:
+    build: .
+    container_name: tibiacore_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: tfsuser
+      DB_PASSWORD: StrongUserPassword!
+      DB_NAME: tibiacore
+    ports:
+      - "7171:7171"
+      - "7172:7172"
+      - "80:80"
+    volumes:
+      - ./data:/tibiacore/data
+      - ./logs:/tibiacore/logs
+      - ./config.lua:/tibiacore/config.lua
+    networks:
+      - tibiacore_net
+    command: /bin/bash -c "./dbinstall.sh && ./restart.sh"
+
+networks:
+  tibiacore_net:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local

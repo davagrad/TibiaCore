@@ -7,9 +7,9 @@ cd /tibiacore
 mkdir -p logs
 
 # config mysql
-usersql="root"
+usersql="tfsuser"
+sqlpassword="StrongUserPassword!"
 servername="tibiacore"
-sqlpassword="123"
 
 date=`date "+%d-%m-%y-%H-%M-%S"`
 filename="${servername}-${date}"

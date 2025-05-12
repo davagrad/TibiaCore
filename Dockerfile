@@ -19,9 +19,9 @@ WORKDIR /srv/build
 
 RUN chmod -R 644 /srv/build
 
-COPY src /srv/src
-COPY cmake /srv/cmake
-COPY CMakeLists.txt /srv
+COPY compiler/src /srv/src
+COPY compiler/cmake /srv/cmake
+COPY compiler/CMakeLists.txt /srv
 
 ENV CMAKE_MAKE_PROGRAM=make
 ENV CMAKE_C_COMPILER=gcc
@@ -43,10 +43,12 @@ COPY *.sql key.pem antirollback_config restart.sh /tibiacore/
 COPY data /tibiacore/data
 COPY logs /tibiacore/logs
 COPY config.lua /tibiacore/config.lua
-COPY html.zip /var/www/
+COPY 772.zip /var/www/html.zip
 
 RUN apt-get update && apt-get install -y sudo mariadb-client mariadb-server gdb \
 	libluajit-5.1-dev libluajit-5.1-common wget nano zip apache2 screen htop curl \
+	libboost-filesystem1.74.0 \
+	libpugixml1v5 \
 	php php-zip php-xml php-json php-mbstring php-bcmath php-gd php-mysql \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
@@ -64,7 +66,7 @@ RUN cd html && chown -R www-data.www-data /var/www/* \
 
 WORKDIR /tibiacore 
 
-COPY docker/dbinstall.sh /tibiacore/dbinstall.sh
+COPY dbinstall.sh /tibiacore/dbinstall.sh
 RUN chmod +x -R restart.sh dbinstall.sh
 
 #ENTRYPOINT ["/tibiacore/dbinstall.sh"]

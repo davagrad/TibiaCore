@@ -2,10 +2,10 @@
 
 a2enmod php8.1
 
-OT_DB_HOST="${OT_DB_HOST:-127.0.0.1}"
+OT_DB_HOST="${OT_DB_HOST:-db}"
 OT_DB_PORT="${OT_DB_PORT:-3306}"
-OT_DB_USER="${OT_DB_USER:-root}"
-OT_DB_PASSWORD="123"
+OT_DB_USER="${OT_DB_USER:-tfsuser}"
+OT_DB_PASSWORD="${OT_DB_PASSWORD:-StrongUserPassword!}"
 OT_DB_DATABASE="${OT_DB_DATABASE:-tibiacore}"
 
 
@@ -27,7 +27,7 @@ done
 if mysql -u "$OT_DB_USER" -p"$OT_DB_PASSWORD" -h "$OT_DB_HOST" --port="$OT_DB_PORT" -e "use $OT_DB_DATABASE"; then
 	echo "Creating Database Backup"
 	echo "Saving database to all_databases.sql"
-	mysqldump -u "$OT_DB_USER" -p"$OT_DB_PASSWORD" -h "$OT_DB_HOST" --port="$OT_DB_PORT" --all-databases >/data/all_databases.sql
+	mysqldump -u "$OT_DB_USER" -p"$OT_DB_PASSWORD" -h "$OT_DB_HOST" --port="$OT_DB_PORT" --all-databases > /tibiacore/data/all_databases.sql
 else
 	echo "Creating Database"
 	mysql -u "$OT_DB_USER" -p"$OT_DB_PASSWORD" -h "$OT_DB_HOST" --port="$OT_DB_PORT" -e "CREATE DATABASE $OT_DB_DATABASE;"
@@ -42,11 +42,11 @@ if [[ $(mysql -u "$OT_DB_USER" -p"$OT_DB_PASSWORD" -h "$OT_DB_HOST" -e 'SHOW TAB
 	echo "Table server_config exists so we don't need to import"
 else
 	echo "Importing DataBase"
-	mysql -u "$OT_DB_USER" -p"$OT_DB_PASSWORD" -h "$OT_DB_HOST" --port="$OT_DB_PORT" -D "$OT_DB_DATABASE" <tibiacore.sql
+	mysql -u "$OT_DB_USER" -p"$OT_DB_PASSWORD" -h "$OT_DB_HOST" --port="$OT_DB_PORT" -D "$OT_DB_DATABASE" < tibiacore-empty.sql
 fi
 
 echo ""
 echo "===== Start Server ====="
 echo ""
 
-screen ./restart.sh
+# screen ./restart.sh # Removed this line

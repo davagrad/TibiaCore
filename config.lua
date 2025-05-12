@@ -146,9 +146,9 @@ mapName = "map"
 mapAuthor = "CipSoft"
 
 -- MySQL
-mysqlHost = "127.0.0.1"
-mysqlUser = "root"
-mysqlPass = ""
+mysqlHost = "db"
+mysqlUser = "tfsuser"
+mysqlPass = "StrongUserPassword!"
 mysqlDatabase = "tibiacore"
 mysqlPort = 3306
 mysqlSock = ""
