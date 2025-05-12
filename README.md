@@ -7,7 +7,7 @@ Docker Compose is the easiest way to run TibiaCore server with all necessary dep
 
 ```bash
 # Clone the repository
-git clone https://github.com/RCP91/TibiaCore.git
+git clone git@github.com:davagrad/TibiaCore.git
 cd TibiaCore
 
 # Build and start the server using Docker Compose
